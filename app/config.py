@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     # Security Settings
     secret_key: str = Field(default="change-me-in-production")
     access_token_expire_minutes: int = Field(default=30)
+    algorithm: str = Field(default="HS256")
 
     # CORS Settings
     allowed_origins: List[str] = Field(
