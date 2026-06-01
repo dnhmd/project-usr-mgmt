@@ -1,3 +1,5 @@
+# app/api/v1/schemas/users.py
+
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -39,7 +41,7 @@ class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 class UserListResponse(BaseModel):
-    
+
     users: List[UserResponse]
     total: int
     page: int
