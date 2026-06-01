@@ -1,3 +1,5 @@
+# app/model/domain.py
+
 from datetime import datetime
 
 from sqlalchemy import ForeignKey, String, Text, func
