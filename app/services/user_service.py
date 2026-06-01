@@ -3,7 +3,7 @@
 from typing import Optional
 
 import bcrypt
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthenticationError, NotFoundError
@@ -15,13 +15,15 @@ class UserService:
         self.db = db
 
     async def get_users(self, page: int, limit: int):
+        count = await self.db.execute(select(func.count()).select_from(User))
+
         result = await self.db.execute(
             select(User)
             .offset((page - 1) * limit)
             .limit(limit)
         )
 
-        return result.scalars().all()
+        return count.scalar_one(), result.scalars().all()
 
     async def get_user(self, id: int):
         user = await self.db.get(User, id)
