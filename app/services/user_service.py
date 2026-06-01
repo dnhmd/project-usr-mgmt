@@ -86,5 +86,4 @@ class UserService:
     def is_password_verified(self, password: str, hashed_password: str):
         if bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8")):
             return True
-        else:
-            return False
+        return False

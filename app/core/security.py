@@ -20,9 +20,10 @@ def create_access_token(data: dict) -> str:
     # Copy the payload data to avoid modifying the original dict
     to_encode = data.copy()
     # Calculate token expiration timestamp (UTC)
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+    issued = datetime.now(timezone.utc)
+    expire = issued + timedelta(minutes=settings.access_token_expire_minutes)
     # Add standard "exp" (expiration time) claim to the payload
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "iat": issued})
 
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
