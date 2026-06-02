@@ -17,7 +17,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(120), unique=True)
     hashed_password: Mapped[str] = mapped_column(Text())
     created_at: Mapped[datetime] = mapped_column(server_default=func.now(), nullable=False)
-    is_active: Mapped[bool] = mapped_column(default=True)
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
 
     role: Mapped["Role"] = relationship("Role", back_populates="users")

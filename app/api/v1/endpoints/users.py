@@ -1,25 +1,87 @@
 # app/api/v1/endpoints/users.py
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.schemas.users import UserListResponse
+from app.api.v1.schemas.users import (
+    UserListResponse, 
+    UserPasswordUpdate, 
+    UserResponse, 
+    UserRoleChange, 
+    UserUpdate
+)
 from app.db.session import get_db_session
-from app.dependencies import require_admin
+from app.dependencies import get_current_user, require_admin
 from app.models.domain import User
 from app.services.user_service import UserService
 
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("/users")
-async def get_users(page: int, 
-                    limit: int, 
-                    db: AsyncSession = Depends(get_db_session),
-                    _: User = Depends(require_admin)
+@router.get("")
+async def get_users(
+        page: int, 
+        limit: int, 
+        db: AsyncSession = Depends(get_db_session),
+        _: User = Depends(require_admin),
 ) -> UserListResponse:
     user_service = UserService(db)
     total, users = await user_service.get_users(page, limit)
     
     return UserListResponse(users=users, total=total, page=page, limit=limit)
 
+@router.get("/{user_id}")
+async def get_user(
+        user_id: int,
+        db: AsyncSession = Depends(get_db_session),
+        _: User = Depends(get_current_user)
+) -> UserResponse:
+    user_service = UserService(db)
+    user = await user_service.get_user(user_id)
+
+    return UserResponse.model_validate(user)
+
+@router.patch("/{user_id}")
+async def update_user(
+        user_id: int,
+        user_update: UserUpdate,
+        db: AsyncSession = Depends(get_db_session),
+        _: User = Depends(get_current_user)
+) -> UserResponse:
+    user_service = UserService(db)
+    user = await user_service.update_user(user_id, user_update.name, user_update.email)
+
+    return UserResponse.model_validate(user)
+
+@router.patch("/{user_id}/password")
+async def change_password(
+        user_id: int,
+        user_password_update: UserPasswordUpdate,
+        db: AsyncSession = Depends(get_db_session),
+        _: User = Depends(get_current_user)
+) -> UserResponse:
+    user_service = UserService(db)
+    user = await user_service.change_password(user_id, user_password_update.old_password, user_password_update.new_password)
+
+    return UserResponse.model_validate(user)
+
+@router.patch("/{user_id}/role")
+async def change_role(
+        user_id: int,
+        user_role_change: UserRoleChange,
+        db: AsyncSession = Depends(get_db_session),
+        _: User = Depends(require_admin)
+) -> UserResponse:
+    user_service = UserService(db)
+    user = await user_service.change_role(user_id, user_role_change.role_id)
+
+    return UserResponse.model_validate(user)
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+        user_id: int,
+        db: AsyncSession = Depends(get_db_session),
+        _: User = Depends(require_admin)
+) -> None:
+    user_service = UserService(db)
+    await user_service.delete_user(user_id)

@@ -13,21 +13,16 @@ class UserCreate(BaseModel):
     
 class UserUpdate(BaseModel):
 
-    id: int
     name: Optional[str] = None
     email: Optional[str] = None
 
 class UserPasswordUpdate(BaseModel):
-
-    id: int
-    email: str
 
     old_password: str
     new_password: str
     
 class UserRoleChange(BaseModel):
 
-    id: int
     role_id: int
 
 class UserResponse(BaseModel):

@@ -77,7 +77,9 @@ class UserService:
 
     async def delete_user(self, id: int):
         user = await self.get_user(id)
-        await self.db.delete(user)
+        user.is_active = False
+
+        # await self.db.delete(user)
 
         return user
 
