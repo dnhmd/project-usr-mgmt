@@ -118,6 +118,7 @@ def setup_exception_handlers(app: FastAPI):
             ).model_dump(),
         )
 
+    @app.exception_handler(ValidationError)
     async def validation_exception_handler(
             request: Request, exc: ValidationError
     ) -> JSONResponse:
