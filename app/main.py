@@ -3,10 +3,13 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from slowapi.errors import RateLimitExceeded
+from slowapi.extension import _rate_limit_exceeded_handler
 
 from app.api.v1.router import api_router
 from app.config import get_settings
 from app.core.exceptions import setup_exception_handlers
+from app.core.middleware import limiter
 from app.db.session import close_db, init_db
 
 
@@ -21,6 +24,8 @@ async def lifespan(app: FastAPI):
 def create_application() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
     setup_exception_handlers(app=app)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.include_router(api_router, prefix="/api/v1")
 
     return app
