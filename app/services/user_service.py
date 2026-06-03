@@ -4,9 +4,10 @@ from typing import Optional
 
 import bcrypt
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import AuthenticationError, NotFoundError
+from app.core.exceptions import AuthenticationError, NotFoundError, RequestValidationError
 from app.models.domain import Role, User
 
 class UserService:
@@ -46,6 +47,12 @@ class UserService:
 
         user = User(name=name, email=email, hashed_password=hashed_password, role_id=role_id)
         self.db.add(user)
+        try:
+            await self.db.flush()
+            await self.db.refresh(user)
+        except IntegrityError:
+            await self.db.rollback()
+            raise RequestValidationError("Email already exists")
 
         return user
 
