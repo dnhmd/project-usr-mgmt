@@ -2,13 +2,13 @@
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserCreate(BaseModel):
     
     name: str
-    email: str
+    email: EmailStr
     password: str = Field(min_length=8)
     
 class UserUpdate(BaseModel):
@@ -18,8 +18,8 @@ class UserUpdate(BaseModel):
 
 class UserPasswordUpdate(BaseModel):
 
-    old_password: str
-    new_password: str
+    old_password: str = Field(min_length=8)
+    new_password: str = Field(min_length=8)
     
 class UserRoleChange(BaseModel):
 
