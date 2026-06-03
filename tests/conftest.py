@@ -1,5 +1,6 @@
 # tests/conftest.py
 
+import bcrypt
 from httpx import ASGITransport, AsyncClient
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -8,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import Settings, get_settings
 from app.db.session import Base, get_db_session
 from app.main import create_application
-from app.models.domain import Role
+from app.models.domain import Role, User
 
 # Test database URL (in-memory SQLite)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -58,6 +59,10 @@ async def test_session(test_engine):
         # Seed roles
         session.add(Role(id=1, name="user"))
         session.add(Role(id=2, name="admin"))
+
+        # Seed admin
+        hashed = bcrypt.hashpw("adminpass123".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        session.add(User(id=1, name="Super Admin", email="admin@app.com", hashed_password=hashed, is_active=True, role_id=2))
         await session.commit()
 
         yield session
@@ -99,7 +104,7 @@ def auth_headers():
 
 @pytest.fixture
 async def registered_user(client: AsyncClient):
-    """ Creates a registered user for testing. """
+    """ Create a registered user for testing. """
 
     await client.post(
         "/api/v1/auth/register",
@@ -111,3 +116,28 @@ async def registered_user(client: AsyncClient):
     )
     
     return {"email": "user@test.com", "password": "testpass123"}
+
+@pytest.fixture
+async def user_token(client: AsyncClient, registered_user):
+    """ Create access token for a user. """
+
+    response = await client.post(
+        "/api/v1/auth/login",
+        json=registered_user
+    )
+
+    return response.json()["access_token"]
+
+@pytest.fixture
+async def admin_token(client: AsyncClient):
+    """ Create access token for an admin. """
+
+    response = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "admin@app.com",
+            "password": "adminpass123",
+        }
+    )
+
+    return response.json()["access_token"]

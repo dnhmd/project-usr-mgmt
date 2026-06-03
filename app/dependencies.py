@@ -51,5 +51,5 @@ async def require_admin(
     )
     role = result.scalar_one_or_none()
     if not role or role.name != "admin":
-        raise AuthorizationError("Admin priviledges required")
+        raise AuthorizationError("Admin privileges required")
     return current_user
