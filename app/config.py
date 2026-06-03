@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import List
 
 from pydantic import Field, PostgresDsn
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -39,13 +39,11 @@ class Settings(BaseSettings):
         default=["http://localhost:3000"]
     )
 
-    class Config:
-        # Load from .env file if present
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
-        # Allow environment variables to override
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 @lru_cache
 def get_settings() -> Settings:
