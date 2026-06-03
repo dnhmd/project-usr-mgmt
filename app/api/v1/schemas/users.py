@@ -2,14 +2,14 @@
 
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UserCreate(BaseModel):
     
     name: str
     email: str
-    password: str
+    password: str = Field(min_length=8)
     
 class UserUpdate(BaseModel):
 
