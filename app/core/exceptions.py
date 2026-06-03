@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request, status
 from typing import Any, Optional
 
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError as ValidationError
 from pydantic import BaseModel
 
 
@@ -116,7 +117,36 @@ def setup_exception_handlers(app: FastAPI):
                 request_id=request_id,
             ).model_dump(),
         )
-    
+
+    async def validation_exception_handler(
+            request: Request, exc: ValidationError
+    ) -> JSONResponse:
+        """
+        Handle RequestValidationError raised by FastAPI for a request body failing Pydantic validation.
+        """
+
+        # Get request ID from headers if present
+        request_id = request.headers.get("X-Request-ID")
+
+        # Log full traceback for debugging
+        logger.error(
+            f"Unhandled exception: {str(exc)}",
+            extra={
+                "request_id": request_id,
+                "traceback": traceback.format_exc(),
+            },
+        )
+
+        return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        content=ErrorResponse(
+            error="VALIDATION_ERROR",
+            message="Request validation failed",
+            details={"errors": exc.errors()},
+            request_id=request_id,
+        ).model_dump(),
+    )
+
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(
             request: Request, exc: Exception
