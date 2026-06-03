@@ -96,3 +96,18 @@ def auth_headers():
 
     # In real tests, generate a valid test token
     return {"Authorization": "Bearer test-token"}
+
+@pytest.fixture
+async def registered_user(client: AsyncClient):
+    """ Creates a registered user for testing. """
+
+    await client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Test User",
+            "email": "user@test.com",
+            "password": "testpass123",
+        }
+    )
+    
+    return {"email": "user@test.com", "password": "testpass123"}
