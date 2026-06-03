@@ -1,6 +1,8 @@
 # app/api/v1/endpoints/users.py
 
-from fastapi import APIRouter, Depends, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas.users import (
@@ -20,13 +22,15 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("")
 async def get_users(
-        page: int, 
-        limit: int, 
+        page: int = Query(default=1, ge=1), 
+        limit: int = Query(default=20, ge=1, le=100), 
+        name: Optional[str] = Query(default=None), 
+        is_active: Optional[bool] = Query(default=None), 
         db: AsyncSession = Depends(get_db_session),
         _: User = Depends(require_admin),
 ) -> UserListResponse:
     user_service = UserService(db)
-    total, users = await user_service.get_users(page, limit)
+    total, users = await user_service.get_users(page, limit, name, is_active)
     
     return UserListResponse(users=users, total=total, page=page, limit=limit)
 

@@ -14,16 +14,24 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_users(self, page: int, limit: int):
-        count = await self.db.execute(select(func.count()).select_from(User))
+    async def get_users(self, page: int, limit: int, name: Optional[str], is_active: Optional[bool]):
+        query = select(User)
+        count_query = select(func.count()).select_from(User)
 
-        result = await self.db.execute(
-            select(User)
+        if name is not None:
+            query = query.where(User.name == name)
+            count_query = count_query.where(User.name == name)
+        if is_active is not None:
+            query = query.where(User.is_active == is_active)
+            count_query = count_query.where(User.is_active == is_active)
+        query_result = await self.db.execute(
+            query
             .offset((page - 1) * limit)
             .limit(limit)
         )
+        count_result = await self.db.execute(count_query)
 
-        return count.scalar_one(), result.scalars().all()
+        return count_result.scalar_one(), query_result.scalars().all()
 
     async def get_user(self, id: int):
         user = await self.db.get(User, id)
