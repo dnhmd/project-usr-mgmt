@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import Settings, get_settings
 from app.db.session import Base, get_db_session
 from app.main import create_application
+from app.models.domain import Role
 
 # Test database URL (in-memory SQLite)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -54,6 +55,11 @@ async def test_session(test_engine):
     )
 
     async with session_factory() as session:
+        # Seed roles
+        session.add(Role(id=1, name="user"))
+        session.add(Role(id=2, name="admin"))
+        await session.commit()
+
         yield session
 
 @pytest.fixture
