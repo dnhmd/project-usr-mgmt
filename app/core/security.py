@@ -29,7 +29,7 @@ def create_access_token(data: dict) -> str:
 
     return encoded_jwt
 
-def verify_token(token: str) -> Optional[dict]:
+def verify_access_token(token: str) -> Optional[dict]:
     """
     Verifies the JWT token signature and expiration.
     Returns the decoded payload if valid, or None if invalid.

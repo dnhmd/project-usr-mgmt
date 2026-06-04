@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthenticationError, AuthorizationError
-from app.core.security import verify_token
+from app.core.security import verify_access_token
 from app.db.session import get_db_session
 from app.models.domain import Role, User
 from app.services.user_service import UserService
@@ -33,7 +33,7 @@ async def get_current_user(
         raise AuthenticationError("Invalid authorization header format")
     
     # Verify token and get user ID
-    payload = verify_token(token)
+    payload = verify_access_token(token)
     
     # Fetch user from database
     user_service = UserService(db)
