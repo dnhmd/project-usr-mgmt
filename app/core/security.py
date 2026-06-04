@@ -23,7 +23,7 @@ def create_access_token(data: dict) -> str:
     issued = datetime.now(timezone.utc)
     expire = issued + timedelta(minutes=settings.access_token_expire_minutes)
     # Add standard "exp" (expiration time) claim to the payload
-    to_encode.update({"exp": expire, "iat": issued})
+    to_encode.update({"exp": expire, "iat": issued, "type": "access"})
 
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
@@ -41,6 +41,8 @@ def verify_access_token(token: str) -> Optional[dict]:
     try:
         # Decode automatically validates signature and 'exp' claim
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        if payload.get("type") != "access":
+            raise AuthenticationError("Invalid token type")
         return payload
     
     except jwt.ExpiredSignatureError:
