@@ -104,3 +104,11 @@ class UserService:
 
     def is_password_verified(self, password: str, hashed_password: str):
         return bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8"))
+    
+    async def reset_password(self, id: int, new_password: str):
+        user = await self.get_user(id)
+
+        salt = bcrypt.gensalt()
+        hashed_new_password = (bcrypt.hashpw(new_password.encode("utf-8"), salt)).decode("utf-8")
+
+        user.hashed_password = hashed_new_password

@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=30)
     algorithm: str = Field(default="HS256")
 
+    password_reset_token_expire_minutes: int = Field(default=10)
+
     # CORS Settings
     allowed_origins: List[str] = Field(
         default=["http://localhost:3000"]

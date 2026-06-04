@@ -50,3 +50,45 @@ def verify_access_token(token: str) -> Optional[dict]:
     
     except jwt.JWTError:
         raise AuthenticationError("Invalid token")
+
+def create_password_reset_token(data: dict) -> str:
+    """
+    Generates a signed JWT password reset token.
+    """
+    
+    # Fetch configurations
+    settings = get_settings()
+
+    # Copy the payload data to avoid modifying the original dict
+    to_encode = data.copy()
+    # Calculate token expiration timestamp (UTC)
+    issued = datetime.now(timezone.utc)
+    expire = issued + timedelta(minutes=settings.password_reset_token_expire_minutes)
+    # Add standard "exp" (expiration time) claim to the payload
+    to_encode.update({"exp": expire, "iat": issued, "type": "password_reset"})
+
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+
+    return encoded_jwt
+
+def verify_password_reset_token(token: str) -> Optional[dict]:
+    """
+    Verifies the JWT token signature and expiration.
+    Returns the decoded payload if valid, or None if invalid.
+    """
+
+    # Fetch configurations
+    settings = get_settings()
+
+    try:
+        # Decode automatically validates signature and 'exp' claim
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        if payload.get("type") != "password_reset":
+            raise AuthenticationError("Invalid token type")
+        return payload
+    
+    except jwt.ExpiredSignatureError:
+        raise AuthenticationError("Token has expired")
+    
+    except jwt.JWTError:
+        raise AuthenticationError("Invalid token")
