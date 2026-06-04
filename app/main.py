@@ -9,6 +9,7 @@ from slowapi.extension import _rate_limit_exceeded_handler
 from app.api.v1.router import api_router
 from app.config import get_settings
 from app.core.exceptions import setup_exception_handlers
+from app.core.logging import setup_logging
 from app.core.middleware import limiter
 from app.db.session import close_db, init_db
 
@@ -22,6 +23,7 @@ async def lifespan(app: FastAPI):
     await close_db()
 
 def create_application() -> FastAPI:
+    setup_logging()
     app = FastAPI(lifespan=lifespan)
     setup_exception_handlers(app=app)
     app.state.limiter = limiter
