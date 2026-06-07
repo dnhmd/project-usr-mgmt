@@ -12,6 +12,7 @@ from app.api.v1.schemas.users import (
     UserRoleChange, 
     UserUpdate
 )
+from app.core.exceptions import AuthorizationError
 from app.db.session import get_db_session
 from app.dependencies import get_current_user, require_admin
 from app.models.domain import User
@@ -38,8 +39,11 @@ async def get_users(
 async def get_user(
         user_id: int,
         db: AsyncSession = Depends(get_db_session),
-        _: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user)
 ) -> UserResponse:
+    if current_user.id != user_id and current_user.role_id != 2:
+        raise AuthorizationError()
+    
     user_service = UserService(db)
     user = await user_service.get_user(user_id)
 
@@ -50,8 +54,11 @@ async def update_user(
         user_id: int,
         user_update: UserUpdate,
         db: AsyncSession = Depends(get_db_session),
-        _: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user)
 ) -> UserResponse:
+    if current_user.id != user_id and current_user.role_id != 2:
+        raise AuthorizationError()
+    
     user_service = UserService(db)
     user = await user_service.update_user(user_id, user_update.name, user_update.email)
 
@@ -62,8 +69,11 @@ async def change_password(
         user_id: int,
         user_password_update: UserPasswordUpdate,
         db: AsyncSession = Depends(get_db_session),
-        _: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user)
 ) -> UserResponse:
+    if current_user.id != user_id:
+        raise AuthorizationError()
+
     user_service = UserService(db)
     user = await user_service.change_password(user_id, user_password_update.old_password, user_password_update.new_password)
 
