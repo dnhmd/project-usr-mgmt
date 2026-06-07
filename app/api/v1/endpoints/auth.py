@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.schemas.auth import LoginRequest, PasswordResetConfirm, PasswordResetRequest, TokenResponse
+from app.api.v1.schemas.auth import LoginRequest, PasswordResetConfirm, PasswordResetRequest, RefreshTokenRequest, TokenResponse
 from app.api.v1.schemas.users import UserCreate
 from app.core.exceptions import AuthenticationError
 from app.core.middleware import limiter
@@ -30,8 +30,9 @@ async def register(
             "iss": "private server",
         }
     )
+    refresh_token = await user_service.create_refresh_token(user.id)
 
-    return TokenResponse(access_token=access_token)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token.token)
 
 @router.post("/login")
 @limiter.limit("5/minute")
@@ -52,8 +53,9 @@ async def login(
             "iss": "private server",
         }
     )
+    refresh_token = await user_service.create_refresh_token(user.id)
      
-    return TokenResponse(access_token=access_token)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token.token)
 
 @router.post("/forgot-password")
 @limiter.limit("5/minute")
@@ -89,3 +91,25 @@ async def reset_password(
     await user_service.reset_password(int(payload["sub"]), password_reset_confirm.new_password)
 
     return {"message": "Password reset is successful."}
+
+@router.post("/refresh")
+@limiter.limit("5/minute")
+async def refresh(
+        request: Request,
+        refresh_token_request: RefreshTokenRequest,
+        db: AsyncSession = Depends(get_db_session)
+) -> TokenResponse:
+    user_service = UserService(db)
+    current_refresh_token = await user_service.get_refresh_token(refresh_token_request.refresh_token)
+    user_id = current_refresh_token.user_id
+    await user_service.revoke_refresh_token(current_refresh_token.token)
+
+    access_token = create_access_token(
+        {
+            "sub": str(user_id), 
+            "iss": "private server",
+        }
+    )
+    new_refresh_token = await user_service.create_refresh_token(user_id)
+
+    return TokenResponse(access_token=access_token, refresh_token=new_refresh_token.token)
