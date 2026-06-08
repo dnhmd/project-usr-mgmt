@@ -2,6 +2,7 @@
 
 import bcrypt
 from httpx import ASGITransport, AsyncClient
+from jose import jwt
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
@@ -114,8 +115,18 @@ async def registered_user(client: AsyncClient):
             "password": "testpass123",
         }
     )
+
+    print("REGISTER RESPONSE:", response.status_code, response.json())
+
+    response_data = response.json()
+    token_payload = jwt.decode(
+        response_data["access_token"],
+        key="",
+        options={"verify_signature": False}
+    )
     
     return {
+        "id": int(token_payload["sub"]),
         "email": "user@test.com", 
         "password": "testpass123",
         "access_token": response.json()["access_token"],
@@ -136,7 +147,7 @@ async def user_refresh_token(registered_user):
     return registered_user["refresh_token"]
 
 @pytest.fixture
-async def admin_token(client: AsyncClient):
+async def admin_access_token(client: AsyncClient):
     """ Create access token for an admin. """
 
     response = await client.post(

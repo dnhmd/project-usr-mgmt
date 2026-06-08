@@ -131,7 +131,7 @@ class UserService:
         refresh_token = result.scalar_one_or_none()
 
         if refresh_token is None:
-            raise NotFoundError("Refresh Token", str(id))
+            raise AuthenticationError("Invalid refresh token.")
         
         if refresh_token.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
             raise AuthenticationError("Refresh token expired. Please login again.")
