@@ -95,8 +95,8 @@ def setup_exception_handlers(app: FastAPI):
     ) -> JSONResponse:
         """ Handle custom application exceptions. """
 
-        # Get request ID from headers if present
-        request_id = request.headers.get("X-Request-ID")
+        # Get request ID from reqeust state if present
+        request_id = getattr(request.state, "request_id", None)
 
         # Log the error
         logger.error(
@@ -126,8 +126,8 @@ def setup_exception_handlers(app: FastAPI):
         Handle RequestValidationError raised by FastAPI for a request body failing Pydantic validation.
         """
 
-        # Get request ID from headers if present
-        request_id = request.headers.get("X-Request-ID")
+        # Get request ID from reqeust state if present
+        request_id = getattr(request.state, "request_id", None)
 
         # Log full traceback for debugging
         logger.error(
@@ -157,8 +157,8 @@ def setup_exception_handlers(app: FastAPI):
         In production, hide internal details from clients.
         """
 
-        # Get request ID from headers if present
-        request_id = request.headers.get("X-Request-ID")
+        # Get request ID from reqeust state if present
+        request_id = getattr(request.state, "request_id", None)
 
         # Log full traceback for debugging
         logger.error(

@@ -1,10 +1,17 @@
 # app/core/logging.py
 
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import json
 import sys
 
+from app.core.middleware import request_id_var
+
+
+class RequestIDFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.request_id = request_id_var.get()
+        return True
 
 class JSONFormatter(logging.Formatter):
     """
@@ -14,18 +21,17 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
             "module": record.module,
             "function": record.funcName,
             "line": record.lineno,
+            "request_id": getattr(record, "request_id", "")
         }
 
         # Add extra fields if present
-        if hasattr(record, "request_id"):
-            log_data["request_id"] = record.request_id
         if hasattr(record, "user_id"):
             log_data["user_id"] = record.user_id
         if hasattr(record, "duration_ms"):
@@ -52,6 +58,7 @@ def setup_logging(level: str = "INFO") -> None:
 
     # Create console handler with JSON Formatter
     handler = logging.StreamHandler(sys.stdout)
+    handler.addFilter(RequestIDFilter())
     handler.setFormatter(JSONFormatter())
     root_logger.addHandler(handler)
 
