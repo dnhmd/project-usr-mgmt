@@ -46,12 +46,12 @@ async def test_admin_privilege(client: AsyncClient, admin_token):
     data = response.json()
     assert "users" in data
 
-async def test_user_privilege(client: AsyncClient, user_token):
+async def test_user_privilege(client: AsyncClient, user_access_token):
     """ Test non-admin cannot list users """
 
     response = await client.get(
         "/api/v1/users",
-        headers={"Authorization": f"Bearer {user_token}"}
+        headers={"Authorization": f"Bearer {user_access_token}"}
     )
 
     print(response.json())
@@ -62,12 +62,12 @@ async def test_user_privilege(client: AsyncClient, user_token):
     assert data["error"] == "AUTHORIZATION_FAILED"
     assert data["message"] == "Admin privileges required"
 
-async def test_existing_user(client: AsyncClient, user_token):
+async def test_existing_user(client: AsyncClient, user_access_token):
     """ Test to get an existing user. """
 
     response = await client.get(
         "/api/v1/users/1",
-        headers={"Authorization": f"Bearer {user_token}"}
+        headers={"Authorization": f"Bearer {user_access_token}"}
     )
 
     print(response.json())
@@ -76,12 +76,12 @@ async def test_existing_user(client: AsyncClient, user_token):
     data = response.json()
     assert data["id"] == 1
 
-async def test_not_existing_user(client: AsyncClient, user_token):
+async def test_not_existing_user(client: AsyncClient, user_access_token):
     """ Test to get a non-existent user. """
 
     response = await client.get(
         "/api/v1/users/99999",
-        headers={"Authorization": f"Bearer {user_token}"}
+        headers={"Authorization": f"Bearer {user_access_token}"}
     )
 
     print(response.json())

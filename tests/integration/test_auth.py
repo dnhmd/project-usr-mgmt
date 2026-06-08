@@ -89,8 +89,8 @@ async def test_login_success(client: AsyncClient, registered_user):
     response = await client.post(
         "/api/v1/auth/login",
         json={
-            "email": "user@test.com",
-            "password": "testpass123",
+            "email": registered_user["email"],
+            "password": registered_user["password"],
         }
     )
 
@@ -177,3 +177,19 @@ async def test_login_short_password(client: AsyncClient):
     assert "message" in data
     assert "Request validation failed" in data["message"]
     assert "String should have at least 8 characters" in data["details"]["errors"][0]["msg"]
+
+async def test_refresh_success(client: AsyncClient, registered_user):
+    """ Test that refresh request is successful. """
+
+    response = await client.post(
+        "/api/v1/auth/refresh",
+        json={
+            "refresh_token": registered_user["refresh_token"] 
+        }
+    )
+
+    print(response.json())
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["token_type"] == "bearer"

@@ -106,7 +106,7 @@ def auth_headers():
 async def registered_user(client: AsyncClient):
     """ Create a registered user for testing. """
 
-    await client.post(
+    response = await client.post(
         "/api/v1/auth/register",
         json={
             "name": "Test User",
@@ -115,18 +115,25 @@ async def registered_user(client: AsyncClient):
         }
     )
     
-    return {"email": "user@test.com", "password": "testpass123"}
+    return {
+        "email": "user@test.com", 
+        "password": "testpass123",
+        "access_token": response.json()["access_token"],
+        "refresh_token": response.json()["refresh_token"],
+    }
+        
 
 @pytest.fixture
-async def user_token(client: AsyncClient, registered_user):
-    """ Create access token for a user. """
+async def user_access_token(registered_user):
+    """ Return access token for a user. """
 
-    response = await client.post(
-        "/api/v1/auth/login",
-        json=registered_user
-    )
+    return registered_user["access_token"]
 
-    return response.json()["access_token"]
+@pytest.fixture
+async def user_refresh_token(registered_user):
+    """ Return refresh token for a user. """
+
+    return registered_user["refresh_token"]
 
 @pytest.fixture
 async def admin_token(client: AsyncClient):
