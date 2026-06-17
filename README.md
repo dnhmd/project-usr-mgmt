@@ -28,38 +28,51 @@ This project serves two core purposes:
 
 ### Setup & Run
 
-bash
-
 \# 1. Clone and enter  
+```
 git clone https://github.com/dnhmd/project-usr-mgmt.git
 cd usr-mgmt  
+```
   
 \# 2. Create and activate virtual environment  
+```
 python3 -m venv .venv  
 source .venv/bin/activate  
+```
   
 \# 3. Install dependencies  
+```
 pip install -e ".\[dev\]"  
-  
+```
+
 \# 4. Configure environment  
+```
 cp .env.example .env  
+```
 \# Edit .env with your values  
   
 \# 5. Start Postgres  
+```
 docker compose up -d  
+```
   
 \# 6. Run migrations  
+```
 alembic upgrade head  
+```
   
 \# 7. Seed roles  
+```
 docker exec -it postgres\_slim psql -U myuser -d usr\_mgmt -c "INSERT INTO roles (name) VALUES ('user'), ('admin');"  
+```
   
 \# 8. Start server  
+```
 uvicorn app.main:app --reload
+```
 
 ### Running Tests
 
-bash
 
 ```
 pytest tests/ -v
